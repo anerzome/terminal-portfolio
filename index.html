@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dhruv - Terminal Portfolio</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #000;
+            color: #0f0;
+            font-family: monospace;
+        }
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #terminal {
+            height: 100%;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
+            display: none;
+        }
+        #input-line {
+            display: flex;
+        }
+        #prompt {
+            color: #0f0;
+            margin-right: 10px;
+        }
+        #user-input {
+            background-color: transparent;
+            border: none;
+            color: rgb(86, 207, 255);
+            font-family: monospace;
+            font-size: 16px;
+            flex-grow: 1;
+            outline: none;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        .response {
+            margin-bottom: 20px; /* Space between responses */
+        }
+    </style>
+</head>
+<body>
+    <div id="preloader">
+        <pre id="loading-animation"></pre>
+    </div>
+    <div id="terminal">
+        <div id="output"></div>
+        <div id="input-line">
+            <span id="prompt">Enter your name: </span>
+            <input type="text" id="user-name" autofocus>
+        </div>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+        const userNameInput = document.getElementById('user-name');
+        const preloader = document.getElementById('preloader');
+        const loadingAnimation = document.getElementById('loading-animation');
+
+        let userName = '';
+
+        const commands = {
+            help: 'Available commands: about, summary, skills, education, experience, projects, publications, certifications, contact, clear',
+            about: `Hi, I'm Dhruv Rohilla, a final year Electronics and Communication Engineering student. Contact: 7807054840 | dhruvrohilla5@gmail.com | linkedin.com/in/dhruv-rohilla`,
+            summary: `Final year Electronics and Communication Engineering student with a strong foundation in System Testing, Artificial Intelligence (AI), and User Interface Design. Experienced in ASIC and VLSI. Proficient in Embedded C, C++, JavaScript (including React.js, Node.js, Express.js), CSS, and Python.`,
+            skills: `Technical Skills: Python, C++, JavaScript, CSS, HTML, Verilog. Software: Xilinx Vivado, Arduino IDE, Proteus, Eagle. Cybersecurity tools: Nmap, Metasploit, Wireshark, etc.`,
+            education: `Education: Jawaharlal Nehru Government Engineering College, B.Tech in Electronics and Communication Engineering, 2021 - 2025`,
+            experience: `Work Experience: 1. Project Intern at IIT Mandi, May 2023 - Present. 2. Summer Intern at IIT Mandi, June 2024 - July 2024.`,
+            projects: `Projects: NES Emulator using ESP32, Advanced Tree Species Recognition System, ESP-based Home Automation, etc.`,
+            publications: `Publications: GlucoBreath: Non-Invasive Glucometer to Detect Diabetes using Breath, IEEE, April 10, 2024.`,
+            certifications: `Certifications: Ethical Hacking course from Udemy, Workshop on Technologies of 5G and Beyond - IIT Mandi.`,
+            contact: `Contact Information: Phone: 7807054840, Email: dhruvrohilla5@gmail.com, LinkedIn: linkedin.com/in/dhruv-rohilla`,
+            clear: function() {
+                output.innerHTML = '';
+            }
+        };
+
+        function processCommand(cmd) {
+            cmd = cmd.toLowerCase().trim();
+            if (cmd in commands) {
+                if (typeof commands[cmd] === 'function') {
+                    commands[cmd]();
+                    return '';
+                }
+                return commands[cmd];
+            }
+            return `Command not found: ${cmd}. Type 'help' for available commands.`;
+        }
+
+        async function typeText(text) {
+            const div = document.createElement('div');
+            div.className = 'response';
+            output.appendChild(div);
+
+            for (const char of text) {
+                await new Promise(resolve => setTimeout(resolve, 30));
+                div.innerHTML += char;
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+            output.appendChild(document.createElement('br')); // Space between responses
+        }
+
+        async function addToOutput(text) {
+            await typeText(text);
+        }
+
+        userNameInput.addEventListener('keyup', async function(event) {
+            if (event.key === 'Enter') {
+                userName = userNameInput.value;
+                userNameInput.style.display = 'none';
+                document.getElementById('input-line').innerHTML = `<span id="prompt">${userName}@portfolio:~$</span>`;
+                const userInput = document.createElement('input');
+                userInput.type = 'text';
+                userInput.id = 'user-input';
+                userInput.style.backgroundColor = 'transparent';
+                userInput.style.border = 'none';
+                userInput.style.color = 'rgb(86, 207, 255)';
+                userInput.style.fontFamily = 'monospace';
+                userInput.style.fontSize = '16px';
+                userInput.style.flexGrow = '1';
+                userInput.style.outline = 'none';
+                document.getElementById('input-line').appendChild(userInput);
+                userInput.focus();
+                const welcomeText = `Welcome, ${userName}! Type "help" for available commands.`;
+                await addToOutput(welcomeText);
+
+                userInput.addEventListener('keyup', async function(event) {
+                    if (event.key === 'Enter') {
+                        const cmd = userInput.value;
+                        await addToOutput(`\n${userName}@portfolio:~$ ${cmd}\n`);
+                        const result = processCommand(cmd);
+                        if (result) await addToOutput(result);
+                        userInput.value = '';
+                        userInput.scrollIntoView();
+                    }
+                });
+            }
+        });
+
+        // Preloader animation
+        const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+        let i = 0;
+
+        const loadingInterval = setInterval(() => {
+            loadingAnimation.textContent = `Loading ${frames[i = ++i % frames.length]}`;
+        }, 80);
+
+        setTimeout(() => {
+            clearInterval(loadingInterval);
+            preloader.style.display = 'none';
+            document.getElementById('terminal').style.display = 'block';
+        }, 2000);
+    </script>
+</body>
+</html>
